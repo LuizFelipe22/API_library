@@ -1,77 +1,109 @@
 from app import app
 
-from flask import request
+from flask import request, jsonify
 
 from app.services.db_insert import create_book
-from app.services.db_read import read_book, read_book_all, read_tag
+from app.services.db_read import read_book, read_book_all, read_tag, read_book_tags, read_consult_book
 from app.services.db_update import update_book
 from app.services.db_delete import delete_book
 
-from app.services.db_read import read_book_tag, read_book_tags
+from datetime import datetime
 
 
-@app.route('/criar-livro', methods=['POST'])
+@app.route('/livro', methods=['POST'])
 def addbook():
 
-    book = request.form['book']
-    tipo = request.form['type']
-    tags = request.form['tags']
+    book = request.json['book']
+    tipo = request.json['type']
+    tags = request.json['tags']
 
-    if read_book(book) != None: return {"error": f'O livro {book} já estar cadastrado.'}
+    if read_book(book) != None: 
+        return jsonify(datetime= datetime.now(),
+                       error= f'O livro {book} já estar cadastrado.',
+                       status=400)
 
     for tag in tags.split(";"):
         if read_tag(tag) is None:
-            return {"error": f'A tag {tag} não foi encontrada.'}
-
+            return jsonify(datetime= datetime.now(),
+                           error= f'A tag {tag} não foi encontrada.',
+                           status=400)
 
     create_book(book, tipo, tags)
 
-    return {"mensagem": 'Livro adicionado com sucesso!!'}
+    return jsonify(datetime= datetime.now(),
+                   message= 'Livro adicionado com sucesso!!',
+                   status=201)
 
 
-@app.route('/livro', defaults={'book': None})
-@app.route('/livro/<book>')
-def book(book):
+@app.route('/livro', defaults={'id': None})
+@app.route('/livro/<int:id>')
+def book(id: str):
 
-    if book:
-        consultar = read_book(book)
+    if id:
+        consultar = read_book(id)
         if consultar == None:
-            return {"mensagem": f'O livro {book} não existe em nosso banco de dados.'}
+            return jsonify(datetime= datetime.now(),
+                           error= f'Não encontramos o ID {id}.',
+                           status=404)
 
-    elif book is None:
+    elif id is None:
         consultar = read_book_all()
 
-    return consultar
+    return jsonify(datetime= datetime.now(),
+                   message= consultar,
+                   status=200)
 
 
-@app.route('/editar-livro/<book>', methods=['PUT'])
-def put_book(book):
+@app.route('/livro/<int:id>', methods=['PUT'])
+def put_book(id: int):
 
-    new_tags = request.form['new_tags']
-    new_book = request.form['new_book']
-    new_type = request.form['new_type']
+    tags = request.json['tags']
+    book = request.json['book']
+    type = request.json['type']
 
-    if read_book(new_book) != None: return {"error": f'O livro {new_book} já estar cadastrado.'}
+    if book == read_book(id)['livro']:
+        pass
 
-    for tag in new_tags.split(";"):
+    elif read_consult_book(book) != None: 
+        return jsonify(datetime= datetime.now(),
+                       error= f'O livro {book} já estar cadastrado.',
+                       status=400)
+
+    for tag in tags.split(";"):
         if read_tag(tag) is None:
-            return {"error": f'A tag {tag} não foi encontrada.'}
+            return jsonify(datetime= datetime.now(),
+                           error= f'A tag {tag} não foi encontrada.',
+                           status=400)
 
-    update_book(book, new_book, new_tags, new_type)
+    update_book(id, book, tags, type)
 
-    return {"mensagem": 'Edição concluída.'}
+    return jsonify(datetime= datetime.now(),
+                   message= 'Edição concluída.',
+                   status=201)
 
     
-@app.route('/del-livro/<book>', methods=['DELETE'])
-def del_book(book):
+@app.route('/livro/<int:id>', methods=['DELETE'])
+def del_book(id: int):
 
-    if delete_book(book) is None:
-        return {"error": 'Este Livro não foi encontrado em nosso banco de dados.'}
+    if delete_book(id) is None:
+        return jsonify(datetime= datetime.now(),
+                       error= 'Este Livro não foi encontrado em nosso banco de dados.',
+                       status=404)
 
-    return {"mensagem": 'Livro excluído.'}
+    return jsonify(datetime= datetime.now(),
+                   message= f'Livro com o id {id} foi excluído.',
+                   status=202)
 
 
-@app.route('/consultar-livro-tag/<tags>', methods=['GET'])
+@app.route('/livro/tag/<tags>', methods=['GET'])
 def consult_by_tags(tags: str):
 
-    return read_book_tags(tags)
+    for tag in tags.split(";"):
+        if read_tag(tag) is None:
+            return jsonify(datetime= datetime.now(),
+                           error= f'A tag {tag} não foi encontrada.',
+                           status=400)
+
+    return jsonify(datetime= datetime.now(),
+                   message= read_book_tags(tags),
+                   status=200)

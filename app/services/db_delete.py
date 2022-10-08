@@ -3,9 +3,9 @@ from app.models.books_model import Books
 from app.models.tags_model import Tags
 
 
-def delete_book(book: str):
+def delete_book(id: int):
     with create_session() as session:
-        consulta: Books = session.query(Books).filter(Books.book == book).one_or_none()
+        consulta: Books = session.query(Books).filter(Books.id == id).one_or_none()
 
     if consulta != None:
         session.delete(consulta)
@@ -14,9 +14,9 @@ def delete_book(book: str):
     return consulta
 
 
-def delete_tag(tag: str):
+def delete_tag(id: int):
     with create_session() as session:
-        consulta: Tags = session.query(Tags).filter(Tags.tag == tag).one_or_none()
+        consulta: Tags = session.query(Tags).filter(Tags.id == id).one_or_none()
 
     if consulta != None:
         session.delete(consulta)

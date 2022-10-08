@@ -1,21 +1,24 @@
 from app import app
 
+from datetime import datetime
 from csv import DictWriter
+import os
 
-from app.services.db_read import read_book_all
+from app.services.db_read import read_book_all_export
+
+from flask import jsonify
 
 
-@app.route('/export-book/<path:filename>', methods=['POST'])
-def export_book(filename: str):
+@app.route('/export-book', methods=['POST'])
+def export_book():
 
-    try:
-        with open(f'/{filename}', 'w') as arquivo:
-            writer = DictWriter(arquivo, fieldnames=['Book', 'Tipo', 'Tags']) 
-            writer.writeheader() 
-            writer.writerows(read_book_all())
+    filename = os.path.join(os.environ['HOME'] + '/Downloads')
 
-    except FileNotFoundError:
-        return {"mensagem": 'Arquivo não encontrado.'}
+    with open(f'{filename}/livros {datetime.now()}.csv', 'w+') as arquivo:
+        writer = DictWriter(arquivo, fieldnames=['book', 'tipo', 'tags']) 
+        writer.writeheader() 
+        writer.writerows(read_book_all_export())
 
-    return {"mensagem": 'Exportação concluída com sucesso.'}
-
+    return jsonify(datetime= datetime.now(),
+                   message= 'Exportação concluída com sucesso.',
+                   status=201)
