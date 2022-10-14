@@ -1,3 +1,4 @@
+from email.policy import default
 from app import app
 
 from flask import request, jsonify
@@ -17,21 +18,21 @@ def addbook():
     tipo = request.json['type']
     tags = request.json['tags']
 
-    if read_book(book) != None: 
+    if read_consult_book(book) != None: 
         return jsonify(datetime= datetime.now(),
-                       error= f'O livro {book} já estar cadastrado.',
+                       error= f"O livro '{book}' já estar cadastrado.",
                        status=400)
 
     for tag in tags.split(";"):
         if read_tag(tag) is None:
             return jsonify(datetime= datetime.now(),
-                           error= f'A tag {tag} não foi encontrada.',
+                           error= f"A tag '{tag}' não foi encontrada.",
                            status=400)
 
     create_book(book, tipo, tags)
 
     return jsonify(datetime= datetime.now(),
-                   message= 'Livro adicionado com sucesso!!',
+                   message= "Livro adicionado com sucesso!!",
                    status=201)
 
 
@@ -43,14 +44,14 @@ def book(id: str):
         consultar = read_book(id)
         if consultar == None:
             return jsonify(datetime= datetime.now(),
-                           error= f'Não encontramos o ID {id}.',
+                           error= f"Não encontramos o ID '{id}'.",
                            status=404)
 
     elif id is None:
         consultar = read_book_all()
 
     return jsonify(datetime= datetime.now(),
-                   message= consultar,
+                   data= consultar,
                    status=200)
 
 
@@ -66,19 +67,19 @@ def put_book(id: int):
 
     elif read_consult_book(book) != None: 
         return jsonify(datetime= datetime.now(),
-                       error= f'O livro {book} já estar cadastrado.',
+                       error= f"O livro '{book}' já estar cadastrado.",
                        status=400)
 
     for tag in tags.split(";"):
         if read_tag(tag) is None:
             return jsonify(datetime= datetime.now(),
-                           error= f'A tag {tag} não foi encontrada.',
+                           error= f"A tag '{tag}' não foi encontrada.",
                            status=400)
 
     update_book(id, book, tags, type)
 
     return jsonify(datetime= datetime.now(),
-                   message= 'Edição concluída.',
+                   message= "Edição concluída.",
                    status=201)
 
     
@@ -87,23 +88,22 @@ def del_book(id: int):
 
     if delete_book(id) is None:
         return jsonify(datetime= datetime.now(),
-                       error= 'Este Livro não foi encontrado em nosso banco de dados.',
+                       error= "Este Livro não foi encontrado em nosso banco de dados.",
                        status=404)
 
     return jsonify(datetime= datetime.now(),
-                   message= f'Livro com o id {id} foi excluído.',
+                   message= f"Livro com o id '{id}' foi excluído.",
                    status=202)
 
-
-@app.route('/livro/tag/<tags>', methods=['GET'])
+@app.route('/livro/tag', defaults={"tags": None})
+@app.route('/livro/tag/<tags>')
 def consult_by_tags(tags: str):
 
-    for tag in tags.split(";"):
-        if read_tag(tag) is None:
-            return jsonify(datetime= datetime.now(),
-                           error= f'A tag {tag} não foi encontrada.',
-                           status=400)
+    if tags == None:
+        return jsonify(datetime= datetime.now(),
+                       error= "Adicione uma tag para consultar.",
+                       status=404)
 
     return jsonify(datetime= datetime.now(),
-                   message= read_book_tags(tags),
+                   data= read_book_tags(tags),
                    status=200)

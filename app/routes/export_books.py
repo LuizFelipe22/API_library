@@ -12,7 +12,7 @@ from flask import jsonify
 @app.route('/export-book', methods=['POST'])
 def export_book():
 
-    filename = os.path.join(os.environ['HOME'] + '/Downloads')
+    filename = os.path.join(os.environ['HOME'], "Downloads")
 
     with open(f'{filename}/livros {datetime.now()}.csv', 'w+') as arquivo:
         writer = DictWriter(arquivo, fieldnames=['book', 'tipo', 'tags']) 
@@ -20,5 +20,5 @@ def export_book():
         writer.writerows(read_book_all_export())
 
     return jsonify(datetime= datetime.now(),
-                   message= 'Exportação concluída com sucesso.',
+                   message= "Exportação concluída com sucesso.",
                    status=201)

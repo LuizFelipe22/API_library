@@ -74,13 +74,29 @@ def read_book_tags(tags: str):
     return lista_book
 
 
-def read_tag(id: str):
+def read_tag_id(id: str):
 
     lista_tags = []
 
     for tag in id.split(";"):
         with create_session() as session:
             tag = session.query(Tags).filter(Tags.id == int(tag)).first()
+
+        if tag == None:
+            return None
+
+        lista_tags.append({"id":tag.id, "data de criação":tag.create_date , "tag":tag.tag})
+
+    return lista_tags
+
+
+def read_tag(tags: str):
+
+    lista_tags = []
+
+    for tag in tags.split(";"):
+        with create_session() as session:
+            tag = session.query(Tags).filter(Tags.tag == tag).first()
 
         if tag == None:
             return None
